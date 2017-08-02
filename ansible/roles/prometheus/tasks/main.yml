@@ -28,7 +28,7 @@
 
 
 - name: install gosu helper util
-  include: install-gosu.html
+  include: install-gosu.yml
 
 - name: install prometheus
   include: install-prometheus.yml
