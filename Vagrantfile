@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
         node.vm.network "forwarded_port", guest: 9093, host: 9093
 
         node.vm.provision "ansible" do |ansible|
-          ansible.playbook = "install.yml"
+          ansible.playbook = "ansible/playbook.yml"
           ansible.verbose = "vv"
         end
 
