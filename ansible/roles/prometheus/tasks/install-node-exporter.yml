@@ -1,0 +1,55 @@
+---
+- name: set internal variables for convenience
+  set_fact:
+    prometheus_node_exporter_subdir: '{{ prometheus_install_path }}/node_exporter-{{ prometheus_node_exporter_version }}.linux-amd64'
+
+- name: set download url
+  set_fact:
+    prometheus_node_exporter_tarball_url: '{{ https://github.com/prometheus/node_exporter/releases/download/v{{ prometheus_node_exporter_version }}/node_exporter-{{ prometheus_node_exporter_version }}.linux-amd64.tar.gz'
+
+- name: set daemon dir
+  set_fact:
+    prometheus_node_exporter_daemon_dir: '{{ prometheus_node_exporter_subdir }}'
+
+- name: download and untar node_exporter tarball
+  unarchive:
+    src: '{{ prometheus_node_exporter_tarball_url }}'
+    dest: '{{ prometheus_install_path }}'
+    copy: no
+
+- name: set permissions, owner and group
+  file:
+    path: '{{ prometheus_node_exporter_daemon_dir }}/node_exporter'
+    owner: prometheus
+    group: prometheus
+    mode: 'go-w'
+
+- name: create directory for data
+  file:
+    path: '{{ prometheus_db_path }}'
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 'u=rwx,g=rx,o='
+
+- name: set node_exporter variables
+  copy: 
+    src: 'files/etc-default-node-exporter'
+    dest: '/etc/default/node_exporter'
+  register: node_exporter_config
+
+- debug: var=node_exporter_config
+  notify:
+    - reload node exporter
+  when: node_exporter_config.changed
+
+- name: copy systemd config to server
+  template:
+    src: 'node_exporter.service.j2'
+    dest: '/lib/systemd/system/node_exporter.service'
+
+- name: set INIT status and start
+  service:
+    name: node_exporter
+    enabled: yes
+    state: started
