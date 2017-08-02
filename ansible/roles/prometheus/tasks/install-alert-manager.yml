@@ -1,0 +1,54 @@
+---
+- name: set internal variables for signature
+  set_fact:
+    prometheus_alertmanager_signature: 'alertmanager-{{ prometheus_alertmanager_version }}.{{ prometheus_platform_suffix }}'
+
+- name:
+  set_fact:
+    prometheus_alertmanager_untar_path: '{{ prometheus_install_path }}'
+    prometheus_alertmanager_daemon_dir: '{{ prometheus_install_path }}/{{ prometheus_alertmanager_signature }}'
+
+- name: set download url
+  set_fact:
+    prometheus_alertmanager_tarball_url: 'https://github.com/prometheus/alertmanager/releases/download/v{{ prometheus_alertmanager_version }}/{{ prometheus_alertmanager_signature }}.tar.gz'
+
+- name: download and uncompress alertmanager tarball
+  unarchive:
+    src: '{{ prometheus_alertmanager_tarball_url }}'
+    dest: '{{ prometheus_alertmanager_untar_path }}'
+    owner: prometheus
+    group: prometheus
+    mode: 'go-w'
+
+- name: create alertmanager directory for data
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 'u=rwx,g=rx,o='
+  with_items:
+    - '{{ prometheus_alertmanager_db_path }}'
+
+- name: set alert manager variables
+  copy:
+    src: 'files/etc-default-alertmanager'
+    dest: '/etc/default/alertmanager'
+
+- name: copy INIT script to server
+  template:
+    src: 'alertmanager.sh.j2'
+    dest: '/etc/init.d/alertmanager'
+    mode: 'a+x'
+
+- name: set INIT status
+  service:
+    name: alertmanager
+    enabled: yes
+
+- name: install default alertmanager config
+  copy:
+    src: 'files/alertmanager.yml'
+    dest: '{{ prometheus_config_path }}/alertmanager.yml'
+  notify:
+    - restart alertmanager
