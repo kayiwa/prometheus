@@ -19,6 +19,7 @@
     owner: prometheus
     group: prometheus
     mode: 'go-w'
+    copy: no
 
 - name: create alertmanager directory for data
   file:
