@@ -1,0 +1,13 @@
+---
+- hosts: all
+  gather_facts: no
+  become: true
+  tasks:
+    - name: install minimal python
+      raw: sudo bash -c "test -e /usr/bin/python || (apt install -qy python-minimal aptitude)"
+
+- hosts: all
+  become: true
+  roles:
+    - prometheus
+    - nginx
