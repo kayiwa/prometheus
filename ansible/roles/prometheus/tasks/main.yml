@@ -1,0 +1,37 @@
+---
+- name: create prometheus group
+  group: 
+    name: prometheus
+    state: present
+
+- name: create prometheus user
+  user:
+    name: prometheus
+    group: prometheus
+    createhome: no
+    shell: /sbin/nologin
+    comment: "Prometheus User"
+    state: present
+
+- name: mkdir for general cases
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "u=rwx,g=rx,o="
+  with_items:
+    - "{{ prometheus_install_path }}"
+    - "{{ prometheus_config_path }}"
+    - "{{ prometheus_log_path }}"
+    - "{{ prometheus_pid_path }}"
+
+
+- name: install prometheus
+  include: install-prometheus.yml
+
+- name: install node-exporter
+  include: install-node-exporter.yml
+
+- name: install alertmanager
+  include: install-alertmanager.yml
