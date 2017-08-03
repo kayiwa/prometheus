@@ -1,40 +1,38 @@
+# Sample config for Prometheus.
+
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # By default, scrape targets every 15 seconds.
   # scrape_timeout is set to the global default (10s).
 
-  # The labels to add to any time series or alerts when communicating with
+  # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-    monitor: 'master'
+      monitor: 'example'
 
-
-
-{% if prometheus_rule_files is defined %}
-# Rule files specifies a list of files from which rules are read.
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
-  {% for (key, value) in prometheus_rule_files.iteritems() %}
-  - {{ prometheus_rule_path }}/{{ value.dest }}
-  {% endfor %}
-{% endif %}
+  # - "first.rules"
+  # - "second.rules"
 
-
-
-# A list of scrape configurations.
+# A scrape configuration containing exactly one endpoint to scrape: 
+# Here it's Prometheus itself.
 scrape_configs:
-
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'prometheus'
-    scrape_interval: 10s
-    scrape_timeout:  10s
-    static_configs:
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    scrape_timeout: 10s
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    target_groups:
       - targets: ['localhost:9090']
 
-  - job_name: "node"
-    file_sd_configs:
-      - files:
-        - '{{ prometheus_file_sd_config_path }}/*.json'
-        - '{{ prometheus_file_sd_config_path }}/*.yml'
-        - '{{ prometheus_file_sd_config_path }}/*.yaml'
-    #static_configs:
-    #- targets:
-    #  - "localhost:9100"
+  - job_name: node
+    # If prometheus-node-exporter is installed, grab stats about the local
+    # machine by default.
+    target_groups:
+      - targets: ['localhost:9100']
