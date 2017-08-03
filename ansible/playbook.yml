@@ -10,4 +10,4 @@
   become: true
   roles:
     - prometheus
-    - nginx
+    - apache
