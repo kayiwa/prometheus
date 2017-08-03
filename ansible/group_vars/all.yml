@@ -2,3 +2,5 @@
 apache:
     docroot: '/var/www/html'
     servername: '{{ ansible_hostname }}'
+mariadb_mysql_root_password: 'SimplePass'
+
