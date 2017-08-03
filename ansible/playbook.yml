@@ -11,3 +11,4 @@
   roles:
     - prometheus
     - apache
+    - grafana

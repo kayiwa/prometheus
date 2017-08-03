@@ -1,0 +1,8 @@
+---
+- name: install grafana
+  apt:
+    name: '{{ item }}'
+    state: latest
+  with_items:
+    - grafana
+    - grafana-data
