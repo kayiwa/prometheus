@@ -16,7 +16,6 @@
     - headers
     - expires
     - filter
-    - a2enmod
     - proxy
     - proxy_http
     - xml2enc
