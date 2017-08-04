@@ -38,3 +38,6 @@
 
 - name: install alertmanager
   include: install-alertmanager.yml
+
+- name: install mysqld-exporter
+  include: install-mysqld-exporter.yml

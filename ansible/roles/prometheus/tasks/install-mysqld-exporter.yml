@@ -1,0 +1,55 @@
+---
+- name: set internal variables for convenience
+  set_fact:
+    prometheus_mysqld_exporter_subdir: '{{ prometheus_install_path }}/mysqld_exporter-{{ prometheus_mysqld_exporter_version }}.linux-amd64'
+
+- name: set download url
+  set_fact:
+    prometheus_mysqld_exporter_tarball_url: 'https://github.com/prometheus/mysqld_exporter/releases/download/v{{ prometheus_mysqld_exporter_version }}/mysqld_exporter-{{ prometheus_mysqld_exporter_version }}.linux-amd64.tar.gz'
+
+- name: set daemon dir
+  set_fact:
+    prometheus_mysqld_exporter_daemon_dir: '{{ prometheus_mysqld_exporter_subdir }}'
+
+- name: download and untar mysqld_exporter tarball
+  unarchive:
+    src: '{{ prometheus_mysqld_exporter_tarball_url }}'
+    dest: '{{ prometheus_install_path }}'
+    copy: no
+
+- name: set permissions, owner and group
+  file:
+    path: '{{ prometheus_mysqld_exporter_daemon_dir }}/mysqld_exporter'
+    owner: prometheus
+    group: prometheus
+    mode: 'go-w'
+
+- name: create directory for data
+  file:
+    path: '{{ prometheus_db_path }}'
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 'u=rwx,g=rx,o='
+
+- name: set mysqld_exporter variables
+  copy: 
+    src: 'files/etc-default-mysqld-exporter'
+    dest: '/etc/default/mysqld_exporter'
+  register: mysqld_exporter_config
+
+- debug: var=mysqld_exporter_config
+  notify:
+    - reload mysqld exporter
+  when: mysqld_exporter_config.changed
+
+- name: copy systemd config to server
+  template:
+    src: 'mysqld_exporter.service.j2'
+    dest: '/lib/systemd/system/mysqld_exporter.service'
+
+- name: set INIT status and start
+  service:
+    name: mysqld_exporter
+    enabled: yes
+    state: started
